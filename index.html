@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indo Gold Tracker + History</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; margin-bottom: 20px; }
+        .price-big { font-size: 2.5rem; font-weight: bold; color: #b8860b; margin: 10px 0; }
+        button { background: #b8860b; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+        
+        /* History Table Styles */
+        .history-container { width: 100%; max-width: 500px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; color: #666; text-align: left; padding: 12px; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        tr:nth-child(even) { background: #fafafa; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h3>Harga Emas Antam (1gr)</h3>
+        <div class="price-big" id="currentPrice">Rp 0</div>
+        <p id="lastUpdate" style="color: #888;">Menghubungkan...</p>
+        <button id="updateBtn" onclick="refreshData()">Cek Harga Terbaru</button>
+    </div>
+
+    <div class="history-container">
+        <h4 style="padding: 15px; margin: 0; background: #333; color: white;">Riwayat Perubahan</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Harga (IDR)</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function refreshData() {
+            const btn = document.getElementById('updateBtn');
+            btn.innerText = "Memuat...";
+            
+            try {
+                const res = await fetch('/api/gold-price');
+                const data = await res.json();
+                
+                if(data.success) {
+                    // Update main card
+                    document.getElementById('currentPrice').innerText = data.current.price;
+                    document.getElementById('lastUpdate').innerText = "Update: " + data.current.date;
+                    
+                    // Update history table
+                    const tbody = document.getElementById('historyBody');
+                    tbody.innerHTML = ""; // Clear old data
+                    
+                    data.history.forEach(item => {
+                        const row = `<tr>
+                            <td>${item.date}</td>
+                            <td>${item.price.toLocaleString('id-ID')}</td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+                }
+            } catch (e) {
+                alert("Koneksi gagal");
+            } finally {
+                btn.innerText = "Cek Harga Terbaru";
+            }
+        }
+
+        // Run on load
+        window.onload = refreshData;
+    </script>
+</body>
+</html>
